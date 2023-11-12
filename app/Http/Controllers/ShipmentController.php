@@ -158,13 +158,13 @@ class ShipmentController extends Controller
                 $totalPrice = $totalData->sum('total_price');
 
                 $totalPriceVat = $totalPrice;
-                if($shipmentDetails['vat']) {
+                if ($shipmentDetails['vat']) {
                     $totalPriceVat = $totalPrice * ((float) $shipmentDetails['vat'] / 100);
                 }
 
                 $totalVol = $totalLength * $totalWidth * $totalHeight;
                 $totalVolW = $totalVol / $totalWeight;
-                
+
                 $shipmentHeader->update([
                     'total_vol_weight' => $totalVolW,
                     'total_vol' =>  $totalVol,
@@ -302,14 +302,14 @@ class ShipmentController extends Controller
                     'remarks' => $shipmentDetails['remarks'],
                 ]);
 
-                if($shipmentHeader->status == 'Draft' || $shipmentHeader->status == 'Warehouse Confirmation') {
+                if ($shipmentHeader->status == 'Draft' || $shipmentHeader->status == 'Warehouse Confirmation') {
                     $shipmentItemsDelete = ShipmentItem::where('shipment_header_id', $shipmentHeader->id)->get();
-    
-                    if(count($shipmentItemsDelete) > 0)
-                    foreach($shipmentItemsDelete as $shipmentItem) {
-                        $shipmentItem->forceDelete();
-                    } 
-    
+
+                    if (count($shipmentItemsDelete) > 0)
+                        foreach ($shipmentItemsDelete as $shipmentItem) {
+                            $shipmentItem->forceDelete();
+                        }
+
                     foreach ($shipmentItems as $item) {
                         $shipmentItem = new ShipmentItem();
                         $shipmentItem->shipment_header_id = $shipmentHeader->id;
@@ -326,7 +326,7 @@ class ShipmentController extends Controller
                         $shipmentItem->total_price = $item['total_price'];
                         $shipmentItem->save();
                     }
-    
+
                     $totalData = ShipmentItem::where('shipment_header_id', $shipmentHeader->id)->get();
 
                     $totalLength = $totalData->sum('length');
@@ -334,12 +334,12 @@ class ShipmentController extends Controller
                     $totalHeight = $totalData->sum('height');
                     $totalWeight = $totalData->sum('total_weight');
                     $totalPrice = $totalData->sum('total_price');
-    
+
                     $totalPriceVat = $totalPrice;
-                    if($shipmentDetails['vat']) {
+                    if ($shipmentDetails['vat']) {
                         $totalPriceVat = $totalPrice * ((float) $shipmentDetails['vat'] / 100);
                     }
-    
+
                     $totalVol = $totalLength * $totalWidth * $totalHeight;
                     $totalVolW = $totalVol / $totalWeight;
                     $shipmentHeader->update([
@@ -518,7 +518,7 @@ class ShipmentController extends Controller
     {
         $shipmentHeader = ShipmentHeader::where('id', $id)->first();
 
-        if(empty($shipmentHeader)) {
+        if (empty($shipmentHeader)) {
             return response()->json(['message' => 'Shipment not found'], 422);
         }
 
@@ -526,10 +526,23 @@ class ShipmentController extends Controller
             $shipmentHeader->update([
                 'status' => 'Warehouse Confirmation'
             ]);
-        } catch(Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => 'Sorry something went wrong'], 500);
         }
 
         return response()->json(['message' => 'Successfully publish this shipment'], 200);
+    }
+
+    public function requestAPI($shipment_number, Request $request)
+    {
+        $shipment = ShipmentHeader::where('shipment_number', $shipment_number)
+            ->with(['shipmentItems', 'origin', 'destination', 'payment', 'carrier', 'mode', 'type', 'warehouse', 'shipmentHistories'])
+            ->first();
+
+        if (empty($shipment)) {
+            return response()->json(['message' => 'Shipment not found'], 422);
+        }
+
+        return response()->json($shipment, 200);
     }
 }

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('layouts.landing-page');
+    return view('auth.login');
 });
 
 Auth::routes();
@@ -102,3 +102,7 @@ Route::middleware('admin')->group(function () {
         });
     });
 });
+
+// API
+Route::get('/shipment/{shipment_number}', [ShipmentController::class, 'requestAPI'])->name('request.api');
+
