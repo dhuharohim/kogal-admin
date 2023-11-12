@@ -536,7 +536,7 @@ class ShipmentController extends Controller
     public function requestAPI($shipment_number, Request $request)
     {
         $shipment = ShipmentHeader::where('shipment_number', $shipment_number)
-            ->with(['shipmentItems', 'origin', 'destination', 'payment', 'carrier', 'mode', 'type', 'warehouse', 'shipmentHistories'])
+            ->with(['shipmentItems', 'origin', 'destination', 'payment', 'carrier', 'mode', 'type', 'warehouse', 'shipmentHistories', 'shipmentItems.item'])
             ->first();
 
         if (empty($shipment)) {

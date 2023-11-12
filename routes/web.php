@@ -104,5 +104,5 @@ Route::middleware('admin')->group(function () {
 });
 
 // API
-Route::get('/shipment/{shipment_number}', [ShipmentController::class, 'requestAPI'])->name('request.api');
+Route::get('getshipment/details/{shipment_number}', [ShipmentController::class, 'requestAPI'])->name('request.api');
 
