@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Items;
 use App\Models\Warehouse;
+use App\Services\WarehouseActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -58,6 +59,8 @@ class ItemController extends Controller
                 foreach ($warehouseItems as $deleteItem) {
                     $deleteItem->forceDelete();
                 }
+
+                $warehouse = Warehouse::where('id', $request->warehouse_id)->first();
         
                 foreach ($itemsData as $itemData) {
                     $item = new Items();
@@ -72,6 +75,12 @@ class ItemController extends Controller
                     $item->height = $itemData['height'];
                     $item->weight = $itemData['weight'];
                     $item->save();
+
+                    WarehouseActivity::createLog(
+                        'Update Item on Warehouse ' .$warehouse->name_warehouse,
+                        $request->warehouse_id,
+                        'Item update: ' . $itemData['item_name'],
+                        auth()->user()->id);
                 }
             });
             

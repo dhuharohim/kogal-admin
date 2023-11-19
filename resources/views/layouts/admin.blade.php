@@ -79,7 +79,7 @@
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                         <li class="dropdown-header">
                             <h6>{{ $user->name }}</h6>
-                            <span>Admin</span>
+                            <span>{{ $user->role }}</span>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
@@ -120,9 +120,9 @@
                     <span>Dashboard</span>
                 </a>
             </li><!-- End Dashboard Nav -->
-
             <li class="nav-item">
-                <a class="nav-link @yield('shipment') collapsed" data-bs-target="#shipment" data-bs-toggle="collapse" href="#">
+                <a class="nav-link @yield('shipment') collapsed" data-bs-target="#shipment" data-bs-toggle="collapse"
+                    href="#">
                     <i class="bi bi-bar-chart"></i><span>Shipment</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
                 <ul id="shipment" class="nav-content collapse @yield('shipment_show')" data-bs-parent="#sidebar-nav">
@@ -149,7 +149,8 @@
                     data-bs-toggle="collapse" href="#">
                     <i class="bi bi-bar-chart"></i><span>Warehouse</span><i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <ul id="manage-warehouse" class="nav-content collapse @yield('warehouse_show')" data-bs-parent="#sidebar-nav">
+                <ul id="manage-warehouse" class="nav-content collapse @yield('warehouse_show')"
+                    data-bs-parent="#sidebar-nav">
                     <li>
                         <a href="{{ route('warehouse.index') }}" class="@yield('warehouse_manage')">
                             <i class="bi bi-circle"></i><span>Manage</span>
@@ -167,7 +168,7 @@
                     </li>
                 </ul>
             </li><!-- End Charts Nav -->
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link @yield('cms_active') collapsed" data-bs-target="#manage-system"
                     data-bs-toggle="collapse" href="#">
                     <i class="bi bi-bar-chart"></i><span>CMS</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -180,6 +181,11 @@
                         </a>
                     </li>
                 </ul>
+            </li><!-- End Charts Nav --> --}}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="/user-access-management">
+                    <i class="bi bi-bar-chart"></i><span>User Access Management</span>
+                </a>
             </li><!-- End Charts Nav -->
         </ul>
 

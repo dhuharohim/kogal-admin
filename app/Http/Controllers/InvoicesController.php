@@ -143,8 +143,8 @@ class InvoicesController extends Controller
     public function print($invoice_id)
     {
         $invoice = InvoiceShipment::where('id', $invoice_id)
-        ->with(['origin', 'destination', 'payment', 'carrier', 'type', 'mode', 'invoiceItems.item'])
-        ->first();
+            ->with(['origin', 'destination', 'payment', 'carrier', 'type', 'mode', 'invoiceItems.item'])
+            ->first();
 
         if (empty($invoice)) {
             abort(404);
@@ -162,27 +162,27 @@ class InvoicesController extends Controller
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isPhpEnabled', true);
-    
+
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($htmlInvoice);
-    
+
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
-    
+
         $pdfOutput = $dompdf->output();
-    
+
         // Set header respons untuk mengirimkan PDF sebagai unduhan
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="invoice.pdf"');
         echo $pdfOutput;
-    
+
         return;
     }
 
-    public function update($invoice_id, Request $request) 
+    public function update($invoice_id, Request $request)
     {
         $invoice = InvoiceShipment::where('id', $invoice_id)->first();
-        if(empty($invoice)) {
+        if (empty($invoice)) {
             return response()->json(['message' => 'Invoice not found'], 422);
         }
 
@@ -193,10 +193,26 @@ class InvoicesController extends Controller
                     'remarks' => $request->remarks
                 ]);
             });
-        } catch(Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json(['message' => 'Something went wrong'], 500);
         }
 
         return response()->json(['message' => 'Successfully change'], 200);
+    }
+
+    public function getInvoice($invoice_id)
+    {
+        $invoice = InvoiceShipment::where('id', $invoice_id)
+            ->with(['origin', 'destination', 'payment', 'carrier', 'type', 'mode', 'invoiceItems.item'])
+            ->first();
+
+        if (empty($invoice)) {
+            abort(404);
+        }
+
+        return view('admin.shipment.invoices.print', [
+            'user' => auth()->user(),
+            'invoice' => $invoice
+        ]);
     }
 }

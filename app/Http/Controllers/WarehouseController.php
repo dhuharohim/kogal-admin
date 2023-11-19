@@ -7,6 +7,8 @@ use App\Models\ShipmentHeader;
 use App\Models\ShipmentHistories;
 use App\Models\ShipmentItem;
 use App\Models\Warehouse;
+use App\Services\ShipmentActivity;
+use App\Services\WarehouseActivity;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,7 +53,7 @@ class WarehouseController extends Controller
         $warehouseData = $request->warehouse;
         try {
             DB::transaction(function () use ($warehouseData) {
-                Warehouse::create([
+                $warehouse = Warehouse::create([
                     'code_warehouse' => $warehouseData['code_warehouse'],
                     'name_warehouse' => $warehouseData['name_warehouse'],
                     'street' => $warehouseData['street'],
@@ -62,6 +64,8 @@ class WarehouseController extends Controller
                     'work_phone' => $warehouseData['work_phone'],
                     'email_warehouse' => $warehouseData['email']
                 ]);
+
+                WarehouseActivity::createLog('Create a new Warehouse named' . $warehouseData['name_warehouse'], $warehouse->id, 'With code ' . $warehouseData['code_warehouse'], auth()->user()->id);
             });
         } catch (Throwable $e) {
             return response()->json([
@@ -134,6 +138,8 @@ class WarehouseController extends Controller
                     'email_warehouse' => $warehouseUpdate['email'],
                     'work_phone' => $warehouseUpdate['work_phone']
                 ]);
+
+                WarehouseActivity::createLog('Updated Warehouse named' . $warehouseUpdate['name_warehouse'], $warehouse->id, 'With code ' . $warehouseUpdate['code_warehouse'], auth()->user()->id);
             }, 5);
         } catch (Throwable $e) {
             return response()->json([
@@ -173,6 +179,8 @@ class WarehouseController extends Controller
                     $deleteItem->forceDelete();
                 }
                 $warehouse->delete();
+
+                WarehouseActivity::createLog('Delete Warehouse named' . $warehouse->name_warehouse, $warehouse->id, 'With all items', auth()->user()->id);
             });
         } catch (Throwable $e) {
             return response()->json([
@@ -197,7 +205,6 @@ class WarehouseController extends Controller
             $dataRequest = ShipmentHeader::where('warehouse_id', $request->warehouseId)
                 ->whereIn('status', ['Warehouse Confirmation', 'Confirmed', 'Rejected'])->get();
         }
-
 
         return view('admin.warehouse.request-shipment.index', [
             'user' => auth()->user(),
@@ -260,22 +267,34 @@ class WarehouseController extends Controller
                         'remarks' => $request->remarks
                     ]);
 
+                    $action = 'Add Shipment History on #'. $shipmentHeader->shipment_number;
+                    $description = 'History added with status Confirmed';
+                    $activity = new ShipmentActivity();
+                    $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
+
+                    WarehouseActivity::createLog('Approve Request Shipment #' . $shipmentHeader->shipment_number, 
+                    $shipmentHeader->warehouse->id, 'With item name', auth()->user()->id);
+
                     // update stock
                     $shipmentItems = ShipmentItem::whereIn('item_id', $request->itemIds)->get();
-
                     foreach ($shipmentItems as $shipmentItem) {
                         $item = Items::where('id', $shipmentItem->item_id)->first();
-                    
+
                         if ($item) {
                             $item->update([
                                 'quantity' => $item->quantity - $shipmentItem->qty
                             ]);
                         }
+                        WarehouseActivity::createLog('Update item stock on warehouse named' . $shipmentHeader->warehouse->name_warehouse, 
+                        $shipmentHeader->warehouse->id, 'With item name'. $item->item_name . 'and quantity ordered '. $shipmentItem->qty, auth()->user()->id);
                     }
                 } else {
                     $shipmentHeader->update([
                         'status' => 'Rejected',
                     ]);
+
+                    WarehouseActivity::createLog('Rejected Request Shipment #' . $shipmentHeader->shipment_number, 
+                    $shipmentHeader->warehouse->id, 'With all item', auth()->user()->id);
 
                     ShipmentHistories::create([
                         'shipment_header_id' => $shipmentHeader->id,
@@ -286,13 +305,18 @@ class WarehouseController extends Controller
                         'updated_by' => auth()->user()->id,
                         'remarks' => $request->remarks
                     ]);
+
+                    $action = 'Add Shipment History on #'. $shipmentHeader->shipment_number;
+                    $description = 'History added with status Rejected';
+                    $activity = new ShipmentActivity();
+                    $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
                 }
             }, 2);
         } catch (Throwable $e) {
             return response()->json(['message' => 'Some error occured'], 500);
         }
 
-        return response()->json(['message' => 'Successfully '. $request->type == 'Approve' ? 'approve': 'rejected' . ' this shipment.'], 200);
+        return response()->json(['message' => 'Successfully ' . $request->type == 'Approve' ? 'approve' : 'rejected' . ' this shipment.'], 200);
     }
 
     public function pickedUp($shipment_number, Request $request)
@@ -318,6 +342,9 @@ class WarehouseController extends Controller
                     'status' => 'Picked Up',
                 ]);
 
+                WarehouseActivity::createLog('Shipment #' . $shipmentHeader->shipment_number . ' has been picked up', 
+                $shipmentHeader->warehouse->id, 'With item name', auth()->user()->id);
+
                 ShipmentHistories::create([
                     'shipment_header_id' => $shipmentHeader->id,
                     'date' => $request->date,
@@ -327,6 +354,11 @@ class WarehouseController extends Controller
                     'updated_by' => auth()->user()->id,
                     'remarks' => $request->remarks
                 ]);
+
+                $action = 'Add Shipment History on #'. $shipmentHeader->shipment_number;
+                $description = 'History added with status Picked Up';
+                $activity = new ShipmentActivity();
+                $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
             }, 2);
         } catch (Throwable $e) {
             return response()->json(['message' => 'Failed to submit pick up'], 500);

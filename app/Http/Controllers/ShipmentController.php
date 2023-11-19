@@ -11,8 +11,10 @@ use App\Models\PaymentMode;
 use App\Models\ShipmentHeader;
 use App\Models\ShipmentHistories;
 use App\Models\ShipmentItem;
+use App\Models\ShipmentLogActivity;
 use App\Models\TypeOfShipment;
 use App\Models\Warehouse;
+use App\Services\ShipmentActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -91,6 +93,7 @@ class ShipmentController extends Controller
         $receiverDetails = $request->receiver_details;
         $shipmentDetails = $request->shipment_details;
         $shipmentItems = $request->shipment_items;
+        $shipmentNumber = $shipmentDetails['shipment_number'];
         if ($shipmentDetails['shipment_number'] == '' || $shipmentDetails['shipment_number'] == null) {
             $shipmentNumber = 'KJM' . date('YmdHis');
         }
@@ -172,6 +175,14 @@ class ShipmentController extends Controller
                     'vat' => $shipmentDetails['vat'],
                     'total_price_vat' => $totalPriceVat,
                 ]);
+
+                // create a activity
+                $warehouse = Warehouse::where('id', $request->warehouse_id)->first();
+                $shipmentActivity = new ShipmentActivity();
+                $action = "Create a shipment #" .$shipmentNumber. ' for '. $warehouse->name_warehouse;
+                $description = 'Total Weight: '. $totalWeight;
+                $shipmentActivity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
+                
             });
         } catch (Throwable $e) {
             return response()->json([
@@ -180,6 +191,8 @@ class ShipmentController extends Controller
                 'e' => $e->getMessage()
             ]);
         }
+
+
         return response()->json([
             'error' => false,
             'message' => 'Successfully create a new shipment!'
@@ -270,7 +283,7 @@ class ShipmentController extends Controller
                 $receiverDetails = $request->receiver_details;
                 $shipmentDetails = $request->shipment_details;
                 $shipmentItems = $request->shipment_items;
-
+                $shipmentNumber = $shipmentDetails['shipment_number'];
                 if ($shipmentDetails['shipment_number'] == '') {
                     $shipmentNumber = 'KJM' . date('YmdHis');
                 }
@@ -349,6 +362,16 @@ class ShipmentController extends Controller
                         'vat' => $shipmentDetails['vat'],
                         'total_price_vat' => $totalPriceVat,
                     ]);
+
+                    // create a new activity
+                    $activity = new ShipmentActivity();
+                    $description = 'Updating some fields';
+                    if($shipmentNumber !== $shipmentHeader->shipment_number) {
+                        $description = 'Updating some fields, and the shipment number from ' . $shipmentHeader->shipment_number . ' to ' . $shipmentNumber;
+                    }
+
+                    $action = 'Update Shipment #' . $shipmentHeader->shipment_number;
+                    $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
                 }
             }, 2);
         } catch (Throwable $e) {
@@ -377,6 +400,9 @@ class ShipmentController extends Controller
 
         $shipment->delete();
 
+        $action = 'Delete shipment #' . $shipment->shipment_number;
+        $activity = new ShipmentActivity();
+        $activity->createLog($action, $shipment->id, '', auth()->user()->id);
         return response()->json([
             'error' => false,
             'message' => 'Successfully delete shipment'
@@ -434,6 +460,11 @@ class ShipmentController extends Controller
                     'status' => $shipmentHistories->status,
                     'remarks' => $shipmentHistories->remarks
                 ]);
+
+                $action = 'Add Shipment History on #'. $shipmentHeader->shipment_number;
+                $description = 'History added with status '. $newHistory['status'];
+                $activity = new ShipmentActivity();
+                $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
             }, 2);
         } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -464,6 +495,11 @@ class ShipmentController extends Controller
                     'status' => $lastHistory->status,
                     'remarks' => $lastHistory->remarks
                 ]);
+
+                $action = 'Delete Shipment History on #'. $shipmentHeader->shipment_number;
+                $description = 'Shipment history with status '. $lastHistory->status;
+                $activity = new ShipmentActivity();
+                $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
             }, 2);
         } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -506,6 +542,11 @@ class ShipmentController extends Controller
                         'remarks' => $shipmentHistory->remarks
                     ]);
                 }
+                
+                $action = 'Edit Shipment History on #'. $shipmentHeader->shipment_number;
+                $description = 'Shipment history with status '. $lastHistory->status;
+                $activity = new ShipmentActivity();
+                $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
             }, 2);
         } catch (Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -526,6 +567,11 @@ class ShipmentController extends Controller
             $shipmentHeader->update([
                 'status' => 'Warehouse Confirmation'
             ]);
+
+            $action = 'Publish shipment #'. $shipmentHeader->shipment_number;
+            $description = '';
+            $activity = new ShipmentActivity();
+            $activity->createLog($action, $shipmentHeader->id, $description, auth()->user()->id);
         } catch (Throwable $e) {
             return response()->json(['message' => 'Sorry something went wrong'], 500);
         }
@@ -536,7 +582,8 @@ class ShipmentController extends Controller
     public function requestAPI($shipment_number, Request $request)
     {
         $shipment = ShipmentHeader::where('shipment_number', $shipment_number)
-            ->with(['shipmentItems', 'origin', 'destination', 'payment', 'carrier', 'mode', 'type', 'warehouse', 'shipmentHistories', 'shipmentItems.item'])
+            ->with(['shipmentItems', 'origin', 'destination', 'payment', 'carrier', 'mode', 'type', 'warehouse', 'shipmentHistories', 'shipmentItems.item',
+            'invoice'])
             ->first();
 
         if (empty($shipment)) {

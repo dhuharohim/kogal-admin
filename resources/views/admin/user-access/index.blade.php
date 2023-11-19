@@ -1,15 +1,8 @@
 @extends('layouts.admin')
 
-@section('shipment')
-    collapse
+@section('user_access')
+    collapsed
 @endsection
-@section('shipment_show')
-    show
-@endsection
-@section('shipment_manage')
-    active
-@endsection
-
 @section('css')
     <style>
         .btn {
@@ -80,59 +73,51 @@
         }
     </style>
 @endsection
+
 @section('content')
     <div class="pagetitle d-flex justify-content-between items-center">
         <div>
-            <h1>Shipment</h1>
+            <h1>User Access Management</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">Home</li>
-                    <li class="breadcrumb-item">Shipment</li>
-                    <li class="breadcrumb-item active">Manage</li>
+                    <li class="breadcrumb-item active">User Access Management</li>
                 </ol>
             </nav>
         </div>
     </div><!-- End Page Title -->
-
     <section class="section">
         <div class="card">
             <div class="card-header d-flex justify-content-between">
-                <strong>Data Shipments</strong>
+                <strong>User list</strong>
                 <div class="align-self-center">
-                    <a href="{{ route('shipment.create') }}" class="btn btn-outline-info" style="font-size: 12px;">Create</a>
+                    <a href="{{ route('user-access-management.create') }}" class="btn btn-outline-info"
+                        style="font-size: 12px;">Create</a>
                 </div>
             </div>
             <div class="card-body mt-3">
-                <table id="data-shipment" class="table table-bordered table-striped table-hover dt-responsive"
+                <table id="data-user" class="table table-bordered table-striped table-hover dt-responsive"
                     style="width:100%">
                     <thead>
                         <tr>
-                            <td>Shipment Number</td>
-                            <td>Type</td>
-                            <td>Origin</td>
-                            <td>Destination</td>
-                            <td>Expected Delivery</td>
-                            <td>Status</td>
-                            <td>Action</td>
+                            <th>No</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($shipments as $shipment)
+                        @foreach ($users as $data)
                             <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $data->name }}</td>
+                                <td>{{ $data->email }}</td>
+                                <td>{{ $data->role }}</td>
                                 <td>
-                                    <a class="show-shipment" href="{{ route('shipment.show', $shipment->id) }}">
-                                        #{{ $shipment->shipment_number }}
-                                    </a>
-
-                                </td>
-                                <td>{{ $shipment->type->type_of_shipments }}</td>
-                                <td>{{ $shipment->origin->name_origin }}</td>
-                                <td>{{ $shipment->destination->destination_name }}</td>
-                                <td>{{ $shipment->expected_delivery_date_time }}</td>
-                                <td>{{ $shipment->status }}</td>
-                                <td>
-                                    <button onclick="deleteShipment({{ $shipment->id }})"
-                                        class="btn btn-outline-danger">Delete</button>
+                                    <a href="{{ route('user-access-management.view', ['id'=> $data->id]) }}" class="btn btn-outline-info">View</a>
+                                    <button class="btn btn-outline-danger"
+                                        onclick="deleteUser({{ $data->id }})">Delete</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -145,7 +130,7 @@
 
 @section('js')
     <script>
-        new DataTable('#data-shipment', {
+        new DataTable('#data-user', {
             responsive: true,
             fixedHeader: {
                 header: true
@@ -157,10 +142,10 @@
 
         });
 
-        function deleteShipment(shipmentId) {
-            if (confirm('Are you sure you want to delete this shipment?')) {
+        function deleteUser(id) {
+            if (confirm('Are you sure you want to delete this user?')) {
                 $.ajax({
-                    url: '/shipment/delete/' + shipmentId, // Replace with your API endpoint
+                    url: '/user-access-management/delete/' + id, // Replace with your API endpoint
                     type: 'POST',
                     dataType: 'json',
                     headers: {
@@ -178,8 +163,8 @@
                                 message: response.message
                             });
                             setTimeout(() => {
-                                window.location.href = "{{ route('shipment.index') }}"
-                            }, 3000);
+                                window.location.href = "{{ route('user-access-management.index') }}"
+                            }, 1000);
                         }
                     },
                     error: function(error) {

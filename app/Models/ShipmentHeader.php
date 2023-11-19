@@ -102,4 +102,9 @@ class ShipmentHeader extends Model
     {
         return $this->hasMany(ShipmentHistories::class, 'shipment_header_id', 'id');
     }
+
+    public function invoice() 
+    {
+        return $this->hasOne(InvoiceShipment::class,'shipment_header_id', 'id');
+    }
 }
