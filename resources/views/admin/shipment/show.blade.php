@@ -81,6 +81,12 @@
     </style>
 @endsection
 
+@if ($user->role == 'warehouse')
+    <script>
+        window.location = "{{ url('/404') }}";
+    </script>
+@endif
+
 @section('content')
     <div class="pagetitle d-flex justify-content-between items-center">
         <div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FormInputController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoicesController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ShipmentController;
@@ -26,11 +27,10 @@ Route::get('/', function () {
 
 Auth::routes();
 
-// Rute-rute yang hanya bisa diakses oleh admin
 Route::middleware('admin')->group(function () {
+    Route::get('/dashboard-data', [HomeController::class, 'data'])->name('dashboard-data');
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])
         ->name('home');
-
     Route::get('item/{id}', [ItemController::class, 'getItem'])->name('get.item');
 
     // CMS
@@ -45,9 +45,7 @@ Route::middleware('admin')->group(function () {
         Route::post('/delete/{id}', [UserAccessManagementController::class, 'delete'])->name('delete');
         Route::get('/view/{id}', [UserAccessManagementController::class, 'view'])->name('view');
     });
-});
 
-Route::middleware(['warehouse', 'admin'])->group(function () {
     // warehouse
     Route::prefix('warehouse')->name('warehouse.')->group(function () {
         Route::resource('', WarehouseController::class)->except([
@@ -73,12 +71,8 @@ Route::middleware(['warehouse', 'admin'])->group(function () {
             Route::post('{shipment_number}/shipment-picked-up', [WarehouseController::class, 'pickedUp'])->name('picked.up');
         });
     });
-});
-
-Route::middleware('shipment')->group(function () {
-
-     //shipment route
-     Route::prefix('shipment')->name('shipment.')->group(function () {
+      //shipment route
+      Route::prefix('shipment')->name('shipment.')->group(function () {
         Route::get('master', [ShipmentController::class, 'getAjax'])->name('master');
         Route::resource('', ShipmentController::class)->except([
             'show',

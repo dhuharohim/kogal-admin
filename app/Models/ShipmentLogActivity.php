@@ -16,6 +16,13 @@ class ShipmentLogActivity extends Model
         'shipment_id',
         'description',
     ];
+    
+    protected $appends = ['time_elapsed'];
+
+    public function getTimeElapsedAttribute()
+    {
+        return $this->created_at->diffForHumans();
+    }
 
     public function user() {
         return $this->belongsTo(User::class, 'action_by', 'id');

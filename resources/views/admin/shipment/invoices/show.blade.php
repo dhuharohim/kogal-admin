@@ -8,6 +8,11 @@
 @section('shipment_invoice')
     active
 @endsection
+@if ($user->role == 'warehouse')
+    <script>
+        window.location = "{{ url('/404') }}";
+    </script>
+@endif
 @section('content')
     <style>
         p {

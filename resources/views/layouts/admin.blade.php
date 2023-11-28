@@ -120,6 +120,7 @@
                     <span>Dashboard</span>
                 </a>
             </li><!-- End Dashboard Nav -->
+            @if($user->role == 'admin' || $user->role == 'shipment')
             <li class="nav-item">
                 <a class="nav-link @yield('shipment') collapsed" data-bs-target="#shipment" data-bs-toggle="collapse"
                     href="#">
@@ -143,7 +144,8 @@
                     </li>
                 </ul>
             </li><!-- End Charts Nav -->
-
+            @endif
+            @if($user->role == 'admin' || $user->role == 'warehouse')
             <li class="nav-item">
                 <a class="nav-link @yield('warehouse') collapsed" data-bs-target="#manage-warehouse"
                     data-bs-toggle="collapse" href="#">
@@ -168,25 +170,14 @@
                     </li>
                 </ul>
             </li><!-- End Charts Nav -->
-            {{-- <li class="nav-item">
-                <a class="nav-link @yield('cms_active') collapsed" data-bs-target="#manage-system"
-                    data-bs-toggle="collapse" href="#">
-                    <i class="bi bi-bar-chart"></i><span>CMS</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="manage-system" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-
-                    <li>
-                        <a href="charts-apexcharts.html">
-                            <i class="bi bi-circle"></i><span>Landing Page</span>
-                        </a>
-                    </li>
-                </ul>
-            </li><!-- End Charts Nav --> --}}
+            @endif
+            @if($user->role == 'admin')
             <li class="nav-item">
                 <a class="nav-link collapsed" href="/user-access-management">
                     <i class="bi bi-bar-chart"></i><span>User Access Management</span>
                 </a>
             </li><!-- End Charts Nav -->
+            @endif
         </ul>
 
     </aside><!-- End Sidebar-->
