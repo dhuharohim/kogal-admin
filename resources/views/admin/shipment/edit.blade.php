@@ -390,7 +390,7 @@
                                             <td>
                                                 <input name="total-weight" type="text"
                                                     class="form-control total-weight number"
-                                                    value="{{ $item->item->weight * $item->qty }}" readonly>
+                                                    value="{{ $item->weight * $item->qty }}" readonly>
                                             </td>
                                             <td>
                                                 <input name="total-price" type="text"
