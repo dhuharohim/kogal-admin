@@ -260,13 +260,14 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {{-- @dd($warehouse_activities) --}}
                                 @foreach ($warehouse_activities as $warehouse)
                                     <tr>
                                         <th scope="row">{{ $loop->iteration }}</a>
                                         </th>
                                         <td>{{ $warehouse->action }}</td>
                                         <td>{{ $warehouse->user->name }}</td>
-                                        <td>{{ $warehouse->warehouse->code_warehouse }} - {{ $warehouse->warehouse->name_warehouse }}</td>
+                                        <td>{{ $warehouse->warehouse->code_warehouse ?? '' }} - {{ $warehouse->warehouse->name_warehouse ?? '' }}</td>
                                         <td>{{ $warehouse->description }}
                                         </td>
                                     </tr>
